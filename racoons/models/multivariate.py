@@ -201,11 +201,11 @@ def categorical_preprocessing():
 
 
 def get_scale_level(feature: pd.Series):
-    if is_float_dtype(feature.dtype):
+    if isinstance(feature.dtype, float):
         return "numerical"
-    elif is_integer_dtype(feature.dtype):
+    elif isinstance(feature.dtype, pd.Int64Dtype):
         return "ordinal"
-    elif is_categorical_dtype(feature.dtype):
+    elif isinstance(feature.dtype, pd.CategoricalDtype):
         return "categorical"
     else:
         print(f"The feature {feature} has an unsupported dtype {feature.dtype}.")
