@@ -531,9 +531,9 @@ def grid_search_classification(
     )
     with tqdm(total=(targets.shape[1])) as pbar:
         # find best performing model by cross validation
+        plot_index = 0
         for target in targets:
             cv_df = pd.DataFrame(columns=["Model", "AUC"])
-            plot_index = 0
             print("Initial cross-validation...")
             for estimator in estimators:
                 # remove feature selection steps from model for initial cv
