@@ -5,12 +5,18 @@ from matplotlib import pyplot as plt
 
 
 def plot_feature_importances(feature_importances: pd.DataFrame) -> plt.Figure:
+    df = feature_importances.reindex(feature_importances.mean().abs().sort_values(ascending=False).index, axis=1)
+    if df.shape[1] > 20:
+        data = df.loc[:, df.columns[:20]]
+    else:
+        data = df
     fig = plt.figure(figsize=(9, 7))
-    sns.boxplot(data=feature_importances, orient="h", color="cyan", saturation=0.5)
+    sns.boxplot(data=data, orient="h", color="cyan", saturation=0.5)
     plt.axvline(x=0, color=".5")
     plt.xlabel("Feature importance")
     plt.title("Feature importance and its variability")
     plt.subplots_adjust(left=0.3)
+    plt.show()
     return fig
 
 
