@@ -126,7 +126,10 @@ def get_feature_selection_step(method):
 
 def numerical_preprocessing():
     pipe = Pipeline(
-        [("scaler", StandardScaler()), ("imputer", SimpleImputer(strategy="mean"))]
+        [
+            ("scaler", StandardScaler()),
+         # ("imputer", SimpleImputer(strategy="mean"))
+        ]
     )
     return pipe
 
