@@ -91,7 +91,7 @@ def multivariate_classification(
         plot_index = 0
         for target in targets:
             for estimator in estimators:
-                estimator_name = type(get_estimator(estimator)[0][1]).__name__
+                estimator_name = type(classifiers[estimator]).__name__
                 model = build_model(
                     feature_scale_levels,
                     sample_method,

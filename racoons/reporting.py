@@ -62,7 +62,7 @@ def update_report(
     row = [
         target,
         f"positive: {positive_samples}, negative: {negative_samples}",
-        features,
+        f"{features}",
         estimator_name,
         mean_auc,
         std_auc,
