@@ -1,7 +1,7 @@
 from imblearn.pipeline import Pipeline
 from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
-from sklearn.preprocessing import StandardScaler, OneHotEncoder
+from sklearn.preprocessing import StandardScaler, OneHotEncoder, OrdinalEncoder
 
 from racoons.models import classifiers, sample_methods, feature_selection_methods
 
@@ -45,14 +45,19 @@ def get_preprocessing_steps(feature_scale_levels: dict) -> list[tuple[str, objec
             ("ordinal", ordinal_preprocessing(), feature_scale_levels["ordinal"])
         )
     if feature_scale_levels["categorical"]:
-        transformers.append(
-            (
-                "categorical",
-                categorical_preprocessing(),
-                feature_scale_levels["categorical"],
-            )
-        )
-    return [("preprocessor", ColumnTransformer(transformers))]
+        # transformers.append(
+        #     (
+        #         "categorical",
+        #         categorical_preprocessing(),
+        #         feature_scale_levels["categorical"],
+        #     )
+        # )
+        # moved preprocessing of categorical features before pipeline
+        pass
+    if transformers:
+        return [("preprocessor", ColumnTransformer(transformers))]
+    else:
+        return []
 
 
 def get_sampling_step(method) -> list[tuple[str, object]]:
@@ -127,7 +132,12 @@ def numerical_preprocessing():
 
 
 def ordinal_preprocessing():
-    pipe = Pipeline([("imputer", SimpleImputer(strategy="most_frequent"))])
+    pipe = Pipeline(
+        [
+            ("imputer", SimpleImputer(strategy="most_frequent")),
+            ("encoder", OrdinalEncoder()),
+        ]
+    )
     return pipe
 
 
@@ -135,12 +145,12 @@ def categorical_preprocessing():
     pipe = Pipeline(
         [
             ("imputer", SimpleImputer(strategy="most_frequent")),
-            (
-                "encoder",
-                OneHotEncoder(
-                    sparse_output=False, drop="if_binary", handle_unknown="ignore"
-                ),
-            ),
+            # (
+            #     "encoder",
+            #     OneHotEncoder(
+            #         sparse_output=False, drop="if_binary", handle_unknown="ignore"
+            #     ),
+            # ),
         ]
     )
     return pipe

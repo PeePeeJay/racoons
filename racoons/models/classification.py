@@ -394,6 +394,8 @@ def univariate_classification(
                 feature_scale_levels,
             ) = features_and_targets_from_dataframe(df, feature_cols_, target_cols)
 
+            if feature_scale_levels["categorical"]:
+                feature_cols_ = features.columns.tolist()
             # iterate over targets
 
             for target in targets:
@@ -405,9 +407,7 @@ def univariate_classification(
                         feature_selection_method,
                         estimator,
                     )
-                    cv_result = cross_validate_model(
-                        model, df[feature_cols_], df[target]
-                    )
+                    cv_result = cross_validate_model(model, features, df[target])
                     cv_result_metrics = metrics_from_cv_result(cv_result)
 
                     # roc-auc
@@ -438,7 +438,7 @@ def univariate_classification(
                     plt.close(feature_importance_plot)
 
                     # save report
-                    features = model["estimator"].feature_names_in_.tolist()
+                    features_in = model["estimator"].feature_names_in_.tolist()
                     negative_samples = (~df[target]).sum()
                     positive_samples = (df[target]).sum()
                     mean_auc = cv_result_metrics["mean_auc"]
@@ -448,7 +448,7 @@ def univariate_classification(
 
                     report_df.loc[len(report_df.index)] = update_report(
                         target=target,
-                        features=features,
+                        features=features_in,
                         negative_samples=negative_samples,
                         positive_samples=positive_samples,
                         estimator_name=estimator_name,

@@ -24,14 +24,14 @@ def classification_data():
 
     # cast to correct dtype and add random np.nan values
 
-    df['outcome'] = df['outcome'].astype(bool)
-    df['feature_0'] = df['feature_0'].astype(int)
-    df['feature_0'] = df['feature_0'].astype(pd.Int64Dtype())
-    df.loc[0, 'feature_0'] = np.nan
-    df['feature_1'] = np.random.randint(0, 4, size=df.shape[0])
-    df.loc[0, 'feature_1'] = np.nan
-    df['feature_1'] = df["feature_1"].astype(pd.CategoricalDtype())
-    df.loc[3, 'feature_3'] = np.nan
+    df["outcome"] = df["outcome"].astype(bool)
+    df["feature_0"] = np.random.randint(0, 3)
+    df["feature_0"] = df["feature_0"].astype(pd.Int64Dtype())
+    df.loc[0, "feature_0"] = np.nan
+    df["feature_1"] = np.random.randint(0, 4, size=df.shape[0])
+    df.loc[0, "feature_1"] = np.nan
+    df["feature_1"] = df["feature_1"].astype(pd.CategoricalDtype())
+    df.loc[3, "feature_3"] = np.nan
 
     # target and feature columns
     target_col = ["outcome"]
