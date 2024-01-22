@@ -98,7 +98,7 @@ def multivariate_classification(
                     feature_selection_method,
                     estimator,
                 )
-                cv_result = cross_validate_model(model, df[feature_cols], df[target])
+                cv_result = cross_validate_model(model, features, df[target])
                 cv_result_metrics = metrics_from_cv_result(cv_result)
 
                 # roc-auc
@@ -134,7 +134,7 @@ def multivariate_classification(
 
                 report_df.loc[len(report_df.index)] = update_report(
                     target=target,
-                    features=feature_cols,
+                    features=selected_features,
                     negative_samples=negative_samples,
                     positive_samples=positive_samples,
                     estimator_name=estimator_name,
@@ -235,7 +235,7 @@ def grid_search_multivariate_classification(
                     feature_scale_levels, sample_method, None, estimator
                 )
                 initial_cv_result = cross_validate_model(
-                    model, df[feature_cols], df[target]
+                    model, features, df[target]
                 )
 
                 cv_result_metrics = metrics_from_cv_result(initial_cv_result)
@@ -256,7 +256,7 @@ def grid_search_multivariate_classification(
             print("Hyper-parameter optimization...")
             best_params, mean_score, std_score = hyper_parameter_optimization(
                 grid_search_model,
-                df[feature_cols],
+                features,
                 df[target],
             )
             print("done.")
@@ -269,7 +269,7 @@ def grid_search_multivariate_classification(
             )
             optimized_model.set_params(**best_params)
             cv_result = cross_validate_model(
-                optimized_model, df[feature_cols], df[target]
+                optimized_model, features, df[target]
             )
             cv_result_metrics = metrics_from_cv_result(cv_result)
 
@@ -306,7 +306,7 @@ def grid_search_multivariate_classification(
 
             report_df.loc[len(report_df.index)] = update_report(
                 target=target,
-                features=feature_cols,
+                features=selected_features,
                 negative_samples=negative_samples,
                 positive_samples=positive_samples,
                 estimator_name=type(classifiers[best_cv_estimator]).__name__,
