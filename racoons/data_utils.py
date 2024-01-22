@@ -76,9 +76,9 @@ def features_and_targets_from_dataframe(
     if categorical_features:
         # apply one-hot encodig to categorical features
         for feature in categorical_features:
-            df.loc[:, feature] = df.loc[:, feature].fillna(
-                df.loc[:, feature].value_counts().index[0]
-            )
+            # df.loc[:, feature] = df.loc[:, feature].fillna(
+            #     df.loc[:, feature].value_counts().index[0]
+            # )
             df = pd.concat([df, pd.get_dummies(df[feature], prefix=feature)], axis=1)
         df.drop(columns=categorical_features, inplace=True)
 
