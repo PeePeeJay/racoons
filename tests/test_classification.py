@@ -11,7 +11,7 @@ from racoons.models.model_builder import build_model
 from racoons.models.classification import (
     multivariate_classification,
     grid_search_multivariate_classification,
-    univariate_classification,
+    univariate_classification, single_shot_classification,
 )
 from racoons.visualization import plot_feature_importances
 from racoons.data_utils import features_and_targets_from_dataframe
@@ -27,9 +27,16 @@ def test_feature_importance(classification_data):
     feature_selection_method = "lasso"
     estimator_name = "logistic_regression"
 
+    if X.isnull().values.any():
+        print("Features containing missing values. Using XGBClassifier to handle those.")
+        estimator_name = "xgboost"
+        feature_selection_method = None
+        sample_method = None
+
     model = build_model(
         scale_levels, sample_method, feature_selection_method, estimator_name
     )
+
     model.fit(X, y)
     feature_importance = get_feature_importance(model)
     plot_feature_importances(feature_importance)
@@ -50,6 +57,12 @@ class TestClassification:
         sample_method = "smote"
         feature_selection_method = "lasso"
         estimator_name = "random_forest"
+
+        if X.isnull().values.any():
+            print("Features containing missing values. Using XGBClassifier to handle those.")
+            estimator_name = "xgboost"
+            feature_selection_method = None
+            sample_method = None
 
         model = build_model(
             scale_levels, sample_method, feature_selection_method, estimator_name
@@ -77,18 +90,29 @@ class TestClassification:
         out_path = tmp_path
         df, target_cols, feature_cols = classification_data
 
+        feature_selection_method = "lasso"
+        sample_method = "smote"
+
+        if df[feature_cols].isnull().values.any():
+            print("Features containing missing values. Cant use feature selection and sampling.")
+            feature_selection_method = None
+            sample_method = None
+
         result_df = multivariate_classification(
             df=df,
             feature_cols=feature_cols,
             target_cols=target_cols,
-            feature_selection_method="lasso",
-            sample_method="smote",
+            feature_selection_method=feature_selection_method,
+            sample_method=sample_method,
             estimators=classifiers.keys(),
             output_path=out_path,
         )
 
         # Validate the result
-        assert len(result_df) == len(target_cols) * len(classifiers)
+        if df[feature_cols].isnull().values.any():
+            assert len(result_df) == len(target_cols)
+        else:
+            assert len(result_df) == len(target_cols) * len(classifiers)
         assert not result_df.empty
 
     def test_univariate_classification(
@@ -97,17 +121,57 @@ class TestClassification:
         out_path = tmp_path
         df, target_cols, feature_cols = classification_data
 
+        sample_method = "smote"
+
+        if df[feature_cols].isnull().values.any():
+            print("Features containing missing values. Cant use feature selection and sampling.")
+            sample_method = None
+
         result_df = univariate_classification(
             df=df,
             feature_cols=feature_cols,
             target_cols=target_cols,
-            sample_method="smote",
+            sample_method=sample_method,
             estimators=classifiers.keys(),
             output_path=out_path,
         )
 
         # Validate the result
-        assert len(result_df) == len(target_cols) * len(classifiers) * len(feature_cols)
+        if df[feature_cols].isnull().values.any():
+            assert len(result_df) == len(target_cols) * len(feature_cols)
+        else:
+            assert len(result_df) == len(target_cols) * len(classifiers) * len(feature_cols)
+        assert not result_df.empty
+
+    def test_single_shot_classification(
+        self, classification_data, output_path, tmp_path
+    ):
+        out_path = tmp_path
+        df, target_cols, feature_cols = classification_data
+
+        feature_selection_method = "lasso"
+        sample_method = "smote"
+
+        if df[feature_cols].isnull().values.any():
+            print("Features containing missing values. Cant use feature selection and sampling.")
+            feature_selection_method = None
+            sample_method = None
+
+        result_df = single_shot_classification(
+            df=df,
+            feature_cols=feature_cols,
+            target_cols=target_cols,
+            feature_selection_method=feature_selection_method,
+            sample_method=sample_method,
+            estimators=classifiers.keys(),
+            output_path=out_path,
+        )
+
+        # Validate the result
+        if df[feature_cols].isnull().values.any():
+            assert len(result_df) == len(target_cols)
+        else:
+            assert len(result_df) == len(target_cols) * len(classifiers)
         assert not result_df.empty
 
 
@@ -118,10 +182,20 @@ class TestGridSearchClassification:
             X, y, scale_levels = features_and_targets_from_dataframe(
                 df, feature_cols, target_cols
             )
+            sample_method = "smote"
+            feature_selection_method = "lasso"
+            classifier_name = classifier_name
+
+            if X.isnull().values.any():
+                print("Features containing missing values. Using XGBClassifier to handle those.")
+                classifier_name = "xgboost"
+                feature_selection_method = None
+                sample_method = None
+
             model = build_model(
                 feature_scale_levels=scale_levels,
-                feature_selection_method=None,
-                sample_method="smote",
+                feature_selection_method=feature_selection_method,
+                sample_method=sample_method,
                 estimator_name=classifier_name,
             )
             param_grid = get_param_grid(model)
@@ -154,21 +228,31 @@ class TestGridSearchClassification:
                 estimator_name=classifier_name,
             )
             param_grid = get_param_grid(model)
-            assert "feature_selection__estimator__C" in param_grid
-            assert "feature_selection__estimator__solver" in param_grid
+            if feature_selection_method is not None:
+                assert "feature_selection__estimator__C" in param_grid
+                assert "feature_selection__estimator__solver" in param_grid
 
     def test_grid_search_classification(
         self, classification_data, tmp_path, output_path
     ):
         df, target_cols, feature_cols = classification_data
         out_path = tmp_path
+        sample_method = "smote"
+        feature_selection_method = "lasso"
+        classifier_name = classifiers.keys()
+
+        if df[feature_cols].isnull().values.any():
+            print("Features containing missing values. Using XGBClassifier to handle those.")
+            classifier_name = "xgboost"
+            feature_selection_method = None
+            sample_method = None
         result_df = grid_search_multivariate_classification(
             df=df,
             feature_cols=feature_cols,
             target_cols=target_cols,
-            feature_selection_method="lasso",
-            sample_method="smote",
-            estimators=classifiers.keys(),
+            feature_selection_method=feature_selection_method,
+            sample_method=sample_method,
+            estimators=classifier_name,
             output_path=out_path,
         )
 

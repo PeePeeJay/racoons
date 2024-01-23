@@ -4,6 +4,9 @@ import pandas as pd
 from matplotlib import pyplot as plt
 import sklearn
 from pathlib import Path
+
+from sklearn.metrics import roc_auc_score, roc_curve, f1_score
+from sklearn.model_selection import train_test_split
 from tqdm import tqdm
 
 from racoons.models import classifiers
@@ -84,10 +87,15 @@ def multivariate_classification(
     features, targets, feature_scale_levels = features_and_targets_from_dataframe(
         df, feature_cols, target_cols
     )
+    if features.isnull().values.any():
+        print("Features containing missing values. Using XGBClassifier to handle those.")
+        estimators = ["xgboost"]
+        feature_selection_method = None
+        sample_method = None
 
     # iterate over targets and features
     report_df = make_report_df(sample_method, feature_selection_method)
-    with tqdm(total=(targets.shape[1]) * len(classifiers)) as pbar:
+    with tqdm(total=(targets.shape[1]) * len(estimators)) as pbar:
         plot_index = 0
         for target in targets:
             for estimator in estimators:
@@ -219,10 +227,17 @@ def grid_search_multivariate_classification(
         df, feature_cols, target_cols
     )
 
+    if features.isnull().values.any():
+        print("Features containing missing values. Using XGBClassifier to handle those.")
+        estimators = ["xgboost"]
+        feature_selection_method = None
+        sample_method = None
+
     # iterate over targets and features
     report_df = make_report_df(
         sample_method, feature_selection_method, grid_search=True
     )
+
     with tqdm(total=(targets.shape[1])) as pbar:
         # find best performing model by cross validation
         plot_index = 0
@@ -331,6 +346,123 @@ def grid_search_multivariate_classification(
         return report_df
 
 
+def single_shot_classification(
+        df: pd.DataFrame,
+        feature_cols: list[str],
+        target_cols: list[str],
+        sample_method: str,
+        feature_selection_method: str,
+        estimators: list[str],
+        output_path: Path,
+):
+    # setup output folder
+    output_path.mkdir(exist_ok=True)
+    output_folder = (
+            output_path
+            / f"gs_multivariate_analysis_{datetime.now().strftime('%Y-%m-%d_%H:%M:%S')}"
+    )
+    output_folder.mkdir(exist_ok=True)
+
+    # get features and targets
+    features, targets, feature_scale_levels = features_and_targets_from_dataframe(
+        df, feature_cols, target_cols
+    )
+    if features.isnull().values.any():
+        print("Features containing missing values. Using XGBClassifier to handle those.")
+        estimators = ["xgboost"]
+        feature_selection_method = None
+        sample_method = None
+
+    # iterate over targets and features
+    report_df = make_report_df(sample_method, feature_selection_method)
+    with tqdm(total=(targets.shape[1]) * len(estimators)) as pbar:
+        plot_index = 0
+        for target in targets:
+
+            # train-test split
+            y = df[target]
+            X_train, X_test, y_train, y_test = train_test_split(features, y, stratify=y, test_size=0.2, random_state=123)
+
+            for estimator in estimators:
+                estimator_name = type(classifiers[estimator]).__name__
+                model = build_model(
+                    feature_scale_levels,
+                    sample_method,
+                    feature_selection_method,
+                    estimator,
+                )
+                classifier = model.fit(X_train, y_train)
+                preds = model.predict(X_test)
+
+                # f1 score
+                f1 = f1_score(y_test, preds)
+                print(f1)
+                # roc-auc
+                lr_probs = classifier.predict_proba(X_test)
+                lr_probs = lr_probs[:, 1]
+                ns_probs = [0 for _ in range(len(y_test))]
+                ns_auc = roc_auc_score(y_test, ns_probs)
+                lr_auc = roc_auc_score(y_test, lr_probs)
+                ns_fpr, ns_tpr, _ = roc_curve(y_test, ns_probs)
+                lr_fpr, lr_tpr, _ = roc_curve(y_test, lr_probs)
+                plt.plot(ns_fpr, ns_tpr, linestyle='--', label='No Skill ROC AUC=%.3f' % (ns_auc))
+                plt.plot(lr_fpr, lr_tpr, marker='.', label='xgboost ROC AUC=%.3f' % (lr_auc))
+                plt.xlabel('False Positive Rate')
+                plt.ylabel('True Positive Rate')
+                plt.legend()
+                plt.show()
+                roc_curve_plot_path = output_folder / (f"roc_auc_{plot_index}.png")
+                plt.savefig(roc_curve_plot_path, format='pdf')
+
+                # feature importance
+                feature_importance = get_feature_importance(model)
+                feature_importance_plot = plot_feature_importances(feature_importance)
+                feature_importance_plot_path = output_folder / (
+                    f"feature_importance_{plot_index}.png"
+                )
+                feature_importance_csv_path = output_folder / (
+                    f"feature_importance_{plot_index}.csv"
+                )
+                feature_importance.to_csv(feature_importance_csv_path, sep=";")
+                feature_importance_plot.savefig(feature_importance_plot_path, dpi=300)
+                plt.close(feature_importance_plot)
+
+                # save report
+                selected_features = model["estimator"].feature_names_in_
+                negative_samples = (~df[target]).sum()
+                positive_samples = (df[target]).sum()
+                mean_auc = lr_auc
+                std_auc = "not applicable"
+                mean_f1 = f1
+                std_f1 = "not applicable"
+
+                report_df.loc[len(report_df.index)] = update_report(
+                    target=target,
+                    features=selected_features,
+                    negative_samples=negative_samples,
+                    positive_samples=positive_samples,
+                    estimator_name=estimator_name,
+                    mean_auc=mean_auc,
+                    std_auc=std_auc,
+                    mean_f1=mean_f1,
+                    std_f1=std_f1,
+                    roc_plot_path=roc_curve_plot_path,
+                    feature_importance_csv=feature_importance_csv_path,
+                    feature_importance_plot_path=feature_importance_plot_path,
+                    sampling=sample_method,
+                    feature_selection=feature_selection_method,
+                    selected_features=selected_features,
+                )
+                pbar.update(1)
+                plot_index += 1
+            report_df.to_excel(output_folder / "report.xlsx")
+            report_df.to_csv(output_folder / "report.csv", sep=";")
+
+        report_df.to_excel(output_folder / "report.xlsx")
+        report_df.to_csv(output_folder / "report.csv", sep=";")
+        return report_df
+
+
 def univariate_classification(
     df: pd.DataFrame,
     feature_cols: list[str],
@@ -372,7 +504,7 @@ def univariate_classification(
         - The output is stored in the specified output_path.
     """
     feature_selection_method = None  # redundant for univariate analysis
-    with tqdm(total=(len(target_cols) * len(feature_cols) * len(classifiers))) as pbar:
+    with tqdm(total=(len(target_cols) * len(feature_cols) * len(estimators))) as pbar:
         # setup output folder
         output_path.mkdir(exist_ok=True)
         output_folder = (
@@ -396,8 +528,11 @@ def univariate_classification(
 
             if feature_scale_levels["categorical"]:
                 feature_cols_ = features.columns.tolist()
-            # iterate over targets
+            if features.isnull().values.any():
+                print("Features containing missing values. Using XGBClassifier to handle those.")
+                estimators = ["xgboost"]
 
+            # iterate over targets
             for target in targets:
                 for estimator in estimators:
                     estimator_name = type(classifiers[estimator]).__name__

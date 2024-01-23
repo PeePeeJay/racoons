@@ -7,6 +7,8 @@ from sklearn.ensemble import (
 from sklearn.feature_selection import SelectFromModel
 from sklearn.linear_model import LogisticRegression
 from sklearn.tree import DecisionTreeClassifier
+from sklearn.experimental import enable_iterative_imputer
+from sklearn.impute import KNNImputer, IterativeImputer
 from xgboost import XGBClassifier
 
 classifiers = {
@@ -27,6 +29,10 @@ feature_selection_methods = {
     "lasso": SelectFromModel(
         LogisticRegression(penalty="l1", C=0.8, solver="liblinear")
     ),
+}
+imputer_methods = {
+    "k_nearest_neighbors": KNNImputer(),
+    "iterative": IterativeImputer()
 }
 supported_scale_levels = [
     "numerical",

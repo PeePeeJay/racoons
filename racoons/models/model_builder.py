@@ -3,7 +3,7 @@ from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import StandardScaler, OneHotEncoder, OrdinalEncoder
 
-from racoons.models import classifiers, sample_methods, feature_selection_methods
+from racoons.models import classifiers, sample_methods, feature_selection_methods, imputer_methods
 
 
 def get_estimator(estimator_name: str) -> list[tuple[str, object]]:
@@ -41,9 +41,10 @@ def get_preprocessing_steps(feature_scale_levels: dict) -> list[tuple[str, objec
             ("numerical", numerical_preprocessing(), feature_scale_levels["numerical"])
         )
     if feature_scale_levels["ordinal"]:
-        transformers.append(
-            ("ordinal", ordinal_preprocessing(), feature_scale_levels["ordinal"])
-        )
+        # transformers.append(
+        #     ("ordinal", ordinal_preprocessing(), feature_scale_levels["ordinal"])
+        # )
+        pass
     if feature_scale_levels["categorical"]:
         # transformers.append(
         #     (
@@ -52,7 +53,7 @@ def get_preprocessing_steps(feature_scale_levels: dict) -> list[tuple[str, objec
         #         feature_scale_levels["categorical"],
         #     )
         # )
-        # moved preprocessing of categorical features before pipeline
+        # # moved preprocessing of categorical features before pipeline
         pass
     if transformers:
         return [("preprocessor", ColumnTransformer(transformers))]
@@ -124,11 +125,21 @@ def get_feature_selection_step(method):
         return [("feature_selection", feature_selection_methods[method])]
 
 
+def get_imputing_step(method):
+    if method is None:
+        return []
+    elif method not in imputer_methods.keys():
+        raise NotImplementedError(
+            f"The feature selection method '{method}' is not implemented."
+        )
+    else:
+        return [("imputer", imputer_methods[method])]
+
+
 def numerical_preprocessing():
     pipe = Pipeline(
         [
             ("scaler", StandardScaler()),
-         # ("imputer", SimpleImputer(strategy="mean"))
         ]
     )
     return pipe
@@ -137,7 +148,6 @@ def numerical_preprocessing():
 def ordinal_preprocessing():
     pipe = Pipeline(
         [
-            ("imputer", SimpleImputer(strategy="most_frequent")),
             ("encoder", OrdinalEncoder()),
         ]
     )
@@ -147,13 +157,12 @@ def ordinal_preprocessing():
 def categorical_preprocessing():
     pipe = Pipeline(
         [
-            ("imputer", SimpleImputer(strategy="most_frequent")),
-            # (
-            #     "encoder",
-            #     OneHotEncoder(
-            #         sparse_output=False, drop="if_binary", handle_unknown="ignore"
-            #     ),
-            # ),
+            (
+                "encoder",
+                OneHotEncoder(
+                    sparse_output=False, drop="if_binary", handle_unknown="ignore"
+                ),
+            ),
         ]
     )
     return pipe
