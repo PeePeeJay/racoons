@@ -396,7 +396,6 @@ def single_shot_classification(
 
                 # f1 score
                 f1 = f1_score(y_test, preds)
-                print(f1)
                 # roc-auc
                 lr_probs = classifier.predict_proba(X_test)
                 lr_probs = lr_probs[:, 1]
@@ -410,7 +409,6 @@ def single_shot_classification(
                 plt.xlabel('False Positive Rate')
                 plt.ylabel('True Positive Rate')
                 plt.legend()
-                plt.show()
                 roc_curve_plot_path = output_folder / (f"roc_auc_{plot_index}.png")
                 plt.savefig(roc_curve_plot_path, format='pdf')
 
