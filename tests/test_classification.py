@@ -71,19 +71,19 @@ class TestClassification:
             )
 
             # Test the cross_validate_model function
-            tprs, aucs, f1_scores, feature_importances = cross_validate_model(
+            tprs, aucs_preds, aucs_probs, f1_scores, feature_importances = cross_validate_model(
                 model, X, y["outcome"]
             )
 
             # Check if the output lists have the correct lengths (10 folds)
-            assert len(tprs) == len(aucs) == len(f1_scores) == 10
+            assert len(tprs) == len(aucs_preds) == len(f1_scores) == 10
 
             # Check if feature importances is not empty
             assert not feature_importances.empty
 
             # Check if each element in the lists is a NumPy array
             assert all(isinstance(tpr, np.ndarray) for tpr in tprs)
-            assert all(isinstance(auc_, np.float64) for auc_ in aucs)
+            assert all(isinstance(auc_, np.float64) for auc_ in aucs_preds)
             assert all(isinstance(f1_score_, np.float64) for f1_score_ in f1_scores)
 
     def test_multivariate_classification(

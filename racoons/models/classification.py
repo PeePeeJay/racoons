@@ -135,8 +135,10 @@ def multivariate_classification(
                 selected_features = model["estimator"].feature_names_in_
                 negative_samples = (~df[target]).sum()
                 positive_samples = (df[target]).sum()
-                mean_auc = cv_result_metrics["mean_auc"]
-                std_auc = cv_result_metrics["std_auc"]
+                mean_auc_preds = cv_result_metrics["mean_auc_preds"]
+                std_auc_preds = cv_result_metrics["std_auc_preds"]
+                mean_auc_probs = cv_result_metrics["mean_auc_probs"]
+                std_auc_probs = cv_result_metrics["std_auc_probs"]
                 mean_f1 = cv_result_metrics["mean_f1"]
                 std_f1 = cv_result_metrics["std_f1"]
 
@@ -146,8 +148,10 @@ def multivariate_classification(
                     negative_samples=negative_samples,
                     positive_samples=positive_samples,
                     estimator_name=estimator_name,
-                    mean_auc=mean_auc,
-                    std_auc=std_auc,
+                    mean_auc_preds=mean_auc_preds,
+                    std_auc_preds=std_auc_preds,
+                    mean_auc_probs=mean_auc_probs,
+                    std_auc_probs=std_auc_probs,
                     mean_f1=mean_f1,
                     std_f1=std_f1,
                     roc_plot_path=roc_curve_plot_path,
@@ -256,7 +260,7 @@ def grid_search_multivariate_classification(
                 cv_result_metrics = metrics_from_cv_result(initial_cv_result)
                 cv_df.loc[len(cv_df.index)] = [
                     estimator,
-                    cv_result_metrics["mean_auc"],
+                    cv_result_metrics["mean_auc_preds"],
                 ]
             print("Done.")
             best_cv_estimator = cv_df.sort_values(by="AUC", ascending=False)[
@@ -314,8 +318,10 @@ def grid_search_multivariate_classification(
             selected_features = optimized_model["estimator"].feature_names_in_.tolist()
             negative_samples = (~df[target]).sum()
             positive_samples = (df[target]).sum()
-            mean_auc = cv_result_metrics["mean_auc"]
-            std_auc = cv_result_metrics["std_auc"]
+            mean_auc_preds = cv_result_metrics["mean_auc_preds"]
+            std_auc_preds = cv_result_metrics["std_auc_preds"]
+            mean_auc_probs = cv_result_metrics["mean_auc_probs"]
+            std_auc_probs = cv_result_metrics["std_auc_probs"]
             mean_f1 = cv_result_metrics["mean_f1"]
             std_f1 = cv_result_metrics["std_f1"]
 
@@ -325,8 +331,10 @@ def grid_search_multivariate_classification(
                 negative_samples=negative_samples,
                 positive_samples=positive_samples,
                 estimator_name=type(classifiers[best_cv_estimator]).__name__,
-                mean_auc=mean_auc,
-                std_auc=std_auc,
+                mean_auc_preds=mean_auc_preds,
+                std_auc_preds=std_auc_preds,
+                mean_auc_probs=mean_auc_probs,
+                std_auc_probs=std_auc_probs,
                 mean_f1=mean_f1,
                 std_f1=std_f1,
                 roc_plot_path=roc_curve_plot_path,
@@ -401,11 +409,12 @@ def single_shot_classification(
                 lr_probs = lr_probs[:, 1]
                 ns_probs = [0 for _ in range(len(y_test))]
                 ns_auc = roc_auc_score(y_test, ns_probs)
-                lr_auc = roc_auc_score(y_test, lr_probs)
+                lr_auc_probs = roc_auc_score(y_test, lr_probs)
+                lr_auc_preds = roc_auc_score(y_test, preds)
                 ns_fpr, ns_tpr, _ = roc_curve(y_test, ns_probs)
                 lr_fpr, lr_tpr, _ = roc_curve(y_test, lr_probs)
                 plt.plot(ns_fpr, ns_tpr, linestyle='--', label='No Skill ROC AUC=%.3f' % (ns_auc))
-                plt.plot(lr_fpr, lr_tpr, marker='.', label='xgboost ROC AUC=%.3f' % (lr_auc))
+                plt.plot(lr_fpr, lr_tpr, marker='.', label='xgboost ROC AUC=%.3f' % (lr_auc_preds))
                 plt.xlabel('False Positive Rate')
                 plt.ylabel('True Positive Rate')
                 plt.legend()
@@ -429,8 +438,10 @@ def single_shot_classification(
                 selected_features = model["estimator"].feature_names_in_
                 negative_samples = (~df[target]).sum()
                 positive_samples = (df[target]).sum()
-                mean_auc = lr_auc
-                std_auc = "not applicable"
+                mean_auc_probs = lr_auc_probs
+                mean_auc_preds = lr_auc_preds
+                std_auc_probs = "not applicable"
+                std_auc_preds = "not applicable"
                 mean_f1 = f1
                 std_f1 = "not applicable"
 
@@ -440,8 +451,10 @@ def single_shot_classification(
                     negative_samples=negative_samples,
                     positive_samples=positive_samples,
                     estimator_name=estimator_name,
-                    mean_auc=mean_auc,
-                    std_auc=std_auc,
+                    mean_auc_probs=mean_auc_probs,
+                    mean_auc_preds=mean_auc_preds,
+                    std_auc_preds=std_auc_preds,
+                    std_auc_probs=std_auc_probs,
                     mean_f1=mean_f1,
                     std_f1=std_f1,
                     roc_plot_path=roc_curve_plot_path,
@@ -574,8 +587,10 @@ def univariate_classification(
                     features_in = model["estimator"].feature_names_in_.tolist()
                     negative_samples = (~df[target]).sum()
                     positive_samples = (df[target]).sum()
-                    mean_auc = cv_result_metrics["mean_auc"]
-                    std_auc = cv_result_metrics["std_auc"]
+                    mean_auc_preds = cv_result_metrics["mean_auc_preds"]
+                    std_auc_preds = cv_result_metrics["std_auc_preds"]
+                    mean_auc_probs = cv_result_metrics["mean_auc_probs"]
+                    std_auc_probs = cv_result_metrics["std_auc_probs"]
                     mean_f1 = cv_result_metrics["mean_f1"]
                     std_f1 = cv_result_metrics["std_f1"]
 
@@ -585,8 +600,10 @@ def univariate_classification(
                         negative_samples=negative_samples,
                         positive_samples=positive_samples,
                         estimator_name=estimator_name,
-                        mean_auc=mean_auc,
-                        std_auc=std_auc,
+                        mean_auc_preds=mean_auc_preds,
+                        std_auc_preds=std_auc_preds,
+                        mean_auc_probs=mean_auc_probs,
+                        std_auc_probs=std_auc_probs,
                         mean_f1=mean_f1,
                         std_f1=std_f1,
                         roc_plot_path=roc_curve_plot_path,

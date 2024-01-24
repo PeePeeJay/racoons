@@ -30,10 +30,10 @@ def test_features_and_targets_from_dataframe(classification_data):
     )
 
     assert feature_scale_levels["categorical"] == [
-        "feature_1_0.0",
-        "feature_1_1.0",
-        "feature_1_2.0",
-        "feature_1_3.0",
+        "feature_1_0",
+        "feature_1_1",
+        "feature_1_2",
+        "feature_1_3",
     ]
     assert feature_scale_levels["numerical"] == [
         f"feature_{i}" for i in range(2, len(feature_cols))

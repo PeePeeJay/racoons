@@ -3,7 +3,7 @@ from typing import Any
 import numpy as np
 import pandas as pd
 from imblearn.pipeline import Pipeline
-from sklearn.metrics import roc_curve, f1_score, auc
+from sklearn.metrics import roc_curve, f1_score, auc, roc_auc_score
 from sklearn.model_selection import (
     GridSearchCV,
     RepeatedStratifiedKFold,
@@ -168,7 +168,8 @@ def cross_validate_model(model: Pipeline, X: pd.DataFrame, y: pd.Series) -> tupl
         area under the ROC curve, F1 scores and feature importances for each fold.
     """
     tprs = []
-    aucs = []
+    aucs_preds = []
+    aucs_probs = []
     f1 = []
     feature_importance = pd.DataFrame()
     mean_fpr = np.linspace(0, 1, 100)
@@ -180,17 +181,19 @@ def cross_validate_model(model: Pipeline, X: pd.DataFrame, y: pd.Series) -> tupl
         y_test = y[test]
         model.fit(X_train, y_train)
         y_pred = model.predict(X_test)
+        y_proba = model.predict_proba(X_test)
         fpr, tpr, _ = roc_curve(y_test, y_pred)
         f1.append(f1_score(y_test, y_pred))
         interp_tpr = np.interp(mean_fpr, fpr, tpr)
         interp_tpr[0] = 0.0
         tprs.append(interp_tpr)
-        aucs.append(auc(fpr, tpr))
+        aucs_preds.append(auc(fpr, tpr))
+        aucs_probs.append(roc_auc_score(y_test, y_proba[:, 1]))
         feature_importance = pd.concat(
             [feature_importance, get_feature_importance(model)], axis=0
         )
 
-    return tprs, aucs, f1, feature_importance
+    return tprs, aucs_preds, aucs_probs, f1, feature_importance
 
 
 def metrics_from_cv_result(cv_result: tuple):
@@ -202,20 +205,24 @@ def metrics_from_cv_result(cv_result: tuple):
     Returns:
         dict: means and standard of the cross-validation metrics
     """
-    tprs, aucs, f1, _ = cv_result
+    tprs, aucs_preds, aucs_probs, f1, _ = cv_result
     mean_fpr = np.linspace(0, 1, 100)
     mean_tpr = np.mean(tprs, axis=0)
     mean_tpr[-1] = 1.0
-    mean_auc = auc(mean_fpr, mean_tpr)
-    std_auc = np.std(aucs)
+    mean_auc_preds = auc(mean_fpr, mean_tpr)
+    std_auc_preds = np.std(aucs_preds)
+    mean_auc_probs = np.mean(aucs_probs)
+    std_auc_probs = np.std(aucs_probs)
     std_tpr = np.std(tprs, axis=0)
     mean_f1 = np.mean(f1)
     std_f1 = np.std(f1)
     metrics = {
         "mean_fpr": mean_fpr,
         "mean_tpr": mean_tpr,
-        "mean_auc": mean_auc,
-        "std_auc": std_auc,
+        "mean_auc_preds": mean_auc_preds,
+        "std_auc_preds": std_auc_preds,
+        "mean_auc_probs": mean_auc_probs,
+        "std_auc_probs": std_auc_probs,
         "std_tpr": std_tpr,
         "mean_f1": mean_f1,
         "std_f1": std_f1,

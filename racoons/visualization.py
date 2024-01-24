@@ -28,7 +28,7 @@ def plot_roc_curve_from_cv_metrics(cv_result_metrics: dict, plot_title: str):
         cv_result_metrics["mean_tpr"],
         color="b",
         label=r"Mean ROC (AUC = %0.2f $\pm$ %0.2f)"
-        % (cv_result_metrics["mean_auc"], cv_result_metrics["std_auc"]),
+        % (cv_result_metrics["mean_auc_preds"], cv_result_metrics["std_auc_preds"]),
         lw=2,
         alpha=0.8,
     )
