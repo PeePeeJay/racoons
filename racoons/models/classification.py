@@ -32,13 +32,13 @@ sklearn.set_config(transform_output="pandas")
 
 
 def multivariate_classification(
-    df: pd.DataFrame,
-    feature_cols: list[str],
-    target_cols: list[str],
-    feature_selection_method: str,
-    sample_method: str,
-    estimators: list[str],
-    output_path: Path,
+        df: pd.DataFrame,
+        feature_cols: list[str],
+        target_cols: list[str],
+        feature_selection_method: str,
+        sample_method: str,
+        estimators: list[str],
+        output_path: Path,
 ):
     """
     Run a classification pipeline with cross-validation and save the results.
@@ -78,8 +78,8 @@ def multivariate_classification(
     # setup output folder
     output_path.mkdir(exist_ok=True)
     output_folder = (
-        output_path
-        / f"multivariate_analysis_{datetime.now().strftime('%Y-%m-%d_%H:%M:%S')}"
+            output_path
+            / f"multivariate_analysis_{datetime.now().strftime('%Y-%m-%d_%H:%M:%S')}"
     )
     output_folder.mkdir(exist_ok=True)
 
@@ -112,7 +112,7 @@ def multivariate_classification(
                 # roc-auc
                 roc_curve_plot = plot_roc_curve_from_cv_metrics(
                     cv_result_metrics,
-                    plot_title=f"Classification of {target} using " f"{estimator_name}",
+                    plot_title=f"Classification of \n {target} using " f"\n{estimator_name}",
                 )
                 roc_curve_plot_path = output_folder / (f"roc_auc_{plot_index}.png")
                 roc_curve_plot.savefig(roc_curve_plot_path, dpi=600)
@@ -120,7 +120,10 @@ def multivariate_classification(
 
                 # feature importance
                 feature_importance = get_feature_importance(model)
-                feature_importance_plot = plot_feature_importances(feature_importance)
+                feature_importance_plot = plot_feature_importances(
+                    feature_importance, title=f"Feature importance for classification of \n {target} \n"
+                                              f"using \n {estimator_name}"
+                )
                 feature_importance_plot_path = output_folder / (
                     f"feature_importance_{plot_index}.png"
                 )
@@ -172,13 +175,13 @@ def multivariate_classification(
 
 
 def grid_search_multivariate_classification(
-    df: pd.DataFrame,
-    feature_cols: list[str],
-    target_cols: list[str],
-    feature_selection_method: str,
-    sample_method: str,
-    estimators: list[str],
-    output_path: Path,
+        df: pd.DataFrame,
+        feature_cols: list[str],
+        target_cols: list[str],
+        feature_selection_method: str,
+        sample_method: str,
+        estimators: list[str],
+        output_path: Path,
 ):
     """
     Perform grid search for hyperparameter optimization in a classification pipeline.
@@ -221,8 +224,8 @@ def grid_search_multivariate_classification(
     # setup output folder
     output_path.mkdir(exist_ok=True)
     output_folder = (
-        output_path
-        / f"gs_multivariate_analysis_{datetime.now().strftime('%Y-%m-%d_%H:%M:%S')}"
+            output_path
+            / f"gs_multivariate_analysis_{datetime.now().strftime('%Y-%m-%d_%H:%M:%S')}"
     )
     output_folder.mkdir(exist_ok=True)
 
@@ -303,7 +306,10 @@ def grid_search_multivariate_classification(
 
             # feature importance
             feature_importance = get_feature_importance(model)
-            feature_importance_plot = plot_feature_importances(feature_importance)
+            feature_importance_plot = plot_feature_importances(
+                feature_importance, title=f"Feature importance for classification of \n {target} \n"
+                                          f"using \n {type(classifiers[best_cv_estimator]).__name__}"
+            )
             feature_importance_plot_path = output_folder / (
                 f"feature_importance_{plot_index}.png"
             )
@@ -389,7 +395,8 @@ def single_shot_classification(
 
             # train-test split
             y = df[target]
-            X_train, X_test, y_train, y_test = train_test_split(features, y, stratify=y, test_size=0.2, random_state=123)
+            X_train, X_test, y_train, y_test = train_test_split(features, y, stratify=y, test_size=0.2,
+                                                                random_state=123)
 
             for estimator in estimators:
                 estimator_name = type(classifiers[estimator]).__name__
@@ -423,7 +430,10 @@ def single_shot_classification(
 
                 # feature importance
                 feature_importance = get_feature_importance(model)
-                feature_importance_plot = plot_feature_importances(feature_importance)
+                feature_importance_plot = plot_feature_importances(
+                    feature_importance, title=f"Feature importance for classification of \n {target} \n"
+                                              f"using \n {estimator_name}"
+                )
                 feature_importance_plot_path = output_folder / (
                     f"feature_importance_{plot_index}.png"
                 )
@@ -475,12 +485,12 @@ def single_shot_classification(
 
 
 def univariate_classification(
-    df: pd.DataFrame,
-    feature_cols: list[str],
-    target_cols: list[str],
-    sample_method: str,
-    estimators: list[str],
-    output_path: Path,
+        df: pd.DataFrame,
+        feature_cols: list[str],
+        target_cols: list[str],
+        sample_method: str,
+        estimators: list[str],
+        output_path: Path,
 ):
     """
     Run a univariate classification pipeline with cross-validation and save the results.
@@ -519,8 +529,8 @@ def univariate_classification(
         # setup output folder
         output_path.mkdir(exist_ok=True)
         output_folder = (
-            output_path
-            / f"univariate_analysis_{datetime.now().strftime('%Y-%m-%d_%H:%M:%S')}"
+                output_path
+                / f"univariate_analysis_{datetime.now().strftime('%Y-%m-%d_%H:%M:%S')}"
         )
         output_folder.mkdir(exist_ok=True)
 
@@ -560,7 +570,7 @@ def univariate_classification(
                     roc_curve_plot = plot_roc_curve_from_cv_metrics(
                         cv_result_metrics,
                         plot_title=f"Classification of {target} using "
-                        f"{estimator_name}",
+                                   f"{estimator_name}",
                     )
                     roc_curve_plot_path = output_folder / (f"roc_auc_{plot_index}.png")
                     roc_curve_plot.savefig(roc_curve_plot_path, dpi=600)

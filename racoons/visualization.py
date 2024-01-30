@@ -4,20 +4,22 @@ import seaborn as sns
 from matplotlib import pyplot as plt
 
 
-def plot_feature_importances(feature_importances: pd.DataFrame) -> plt.Figure:
+def plot_feature_importances(feature_importances: pd.DataFrame, title=None) -> plt.Figure:
     df = feature_importances.reindex(
         feature_importances.mean().abs().sort_values(ascending=False).index, axis=1
     )
+    if title is None:
+        title = "Feature importance"
     if df.shape[1] > 20:
         data = df.loc[:, df.columns[:20]]
     else:
         data = df
-    fig = plt.figure(figsize=(9, 7))
-    sns.boxplot(data=data, orient="h", color="cyan", saturation=0.5)
-    plt.axvline(x=0, color=".5")
-    plt.xlabel("Feature importance")
-    plt.title("Feature importance and its variability")
-    plt.subplots_adjust(left=0.3)
+    fig, ax = plt.subplots(figsize=(12, 12))
+    sns.barplot(data=data, orient="h", color="b", saturation=1, ax=ax)
+    ax.axvline(x=0, color=".5")
+    ax.xaxis.set_label("Feature importance")
+    ax.set_title(f"{title}")
+    ax.tick_params(axis="y", labelsize=5)
     return fig
 
 

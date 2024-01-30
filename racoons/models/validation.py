@@ -12,6 +12,8 @@ from sklearn.model_selection import (
 
 from racoons.models import classifiers, feature_selection_methods
 
+# TODO: implement permutation test score
+
 
 def hyper_parameter_optimization(
     model: Pipeline, X: pd.DataFrame, y: pd.Series
