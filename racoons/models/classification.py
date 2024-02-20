@@ -38,7 +38,7 @@ def multivariate_classification(
         feature_selection_method: str,
         sample_method: str,
         estimators: list[str],
-        output_path: Path,
+        output_path: Path | str,
 ):
     """
     Run a classification pipeline with cross-validation and save the results.
@@ -76,10 +76,11 @@ def multivariate_classification(
         - The output is stored in the specified output_path.
     """
     # setup output folder
+    output_path = Path(output_path)
     output_path.mkdir(exist_ok=True)
     output_folder = (
             output_path
-            / f"multivariate_analysis_{datetime.now().strftime('%Y-%m-%d_%H:%M:%S')}"
+            / f"multivariate_analysis_{datetime.now().strftime('%Y-%m-%d_%H_%M_%S')}"
     )
     output_folder.mkdir(exist_ok=True)
 
@@ -181,7 +182,7 @@ def grid_search_multivariate_classification(
         feature_selection_method: str,
         sample_method: str,
         estimators: list[str],
-        output_path: Path,
+        output_path: Path | str,
 ):
     """
     Perform grid search for hyperparameter optimization in a classification pipeline.
@@ -222,10 +223,11 @@ def grid_search_multivariate_classification(
         considering the provided feature selection and sampling methods. It outputs a dataframe with the grid search results.
     """
     # setup output folder
+    output_path = Path(output_path)
     output_path.mkdir(exist_ok=True)
     output_folder = (
             output_path
-            / f"gs_multivariate_analysis_{datetime.now().strftime('%Y-%m-%d_%H:%M:%S')}"
+            / f"gs_multivariate_analysis_{datetime.now().strftime('%Y-%m-%d_%H_%M_%S')}"
     )
     output_folder.mkdir(exist_ok=True)
 
@@ -367,13 +369,14 @@ def single_shot_classification(
         sample_method: str,
         feature_selection_method: str,
         estimators: list[str],
-        output_path: Path,
+        output_path: Path | str,
 ):
     # setup output folder
+    output_path = Path(output_path)
     output_path.mkdir(exist_ok=True)
     output_folder = (
             output_path
-            / f"gs_multivariate_analysis_{datetime.now().strftime('%Y-%m-%d_%H:%M:%S')}"
+            / f"gs_multivariate_analysis_{datetime.now().strftime('%Y-%m-%d_%H_%M_%S')}"
     )
     output_folder.mkdir(exist_ok=True)
 
@@ -490,7 +493,7 @@ def univariate_classification(
         target_cols: list[str],
         sample_method: str,
         estimators: list[str],
-        output_path: Path,
+        output_path: Path | str,
 ):
     """
     Run a univariate classification pipeline with cross-validation and save the results.
@@ -527,10 +530,11 @@ def univariate_classification(
     feature_selection_method = None  # redundant for univariate analysis
     with tqdm(total=(len(target_cols) * len(feature_cols) * len(estimators))) as pbar:
         # setup output folder
+        output_path = Path(output_path)
         output_path.mkdir(exist_ok=True)
         output_folder = (
                 output_path
-                / f"univariate_analysis_{datetime.now().strftime('%Y-%m-%d_%H:%M:%S')}"
+                / f"univariate_analysis_{datetime.now().strftime('%Y-%m-%d_%H_%M_%S')}"
         )
         output_folder.mkdir(exist_ok=True)
 
