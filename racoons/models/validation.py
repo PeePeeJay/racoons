@@ -3,7 +3,7 @@ from typing import Any
 import numpy as np
 import pandas as pd
 from imblearn.pipeline import Pipeline
-from sklearn.metrics import roc_curve, f1_score, auc, roc_auc_score, cohen_kappa_score, confusion_matrix
+from sklearn.metrics import roc_curve, f1_score, auc, roc_auc_score, cohen_kappa_score, confusion_matrix, accuracy_score
 from sklearn.model_selection import (
     GridSearchCV,
     RepeatedStratifiedKFold,
@@ -175,9 +175,10 @@ def cross_validate_model(model: Pipeline, X: pd.DataFrame, y: pd.Series) -> tupl
     f1 = []
     cohen_kappa = []
     conf_mat = []
+    accuracies = []
     feature_importance = pd.DataFrame()
     mean_fpr = np.linspace(0, 1, 100)
-    cv = StratifiedKFold(10)
+    cv = StratifiedKFold(2)
     for fold, (train, test) in enumerate(cv.split(X, y)):
         X_train = X.loc[train, :]
         X_test = X.loc[test, :]
@@ -200,12 +201,13 @@ def cross_validate_model(model: Pipeline, X: pd.DataFrame, y: pd.Series) -> tupl
             aucs_preds, aucs_probs, tprs = None, None, None
             cohen_kappa.append(cohen_kappa_score(y_test, y_pred))
             conf_mat.append(confusion_matrix(y_test, y_pred))
+            accuracies.append(accuracy_score(y_test, y_pred))
 
         feature_importance = pd.concat(
             [feature_importance, get_feature_importance(model)], axis=0
         )
 
-    return tprs, aucs_preds, aucs_probs, f1, feature_importance, cohen_kappa, conf_mat
+    return tprs, aucs_preds, aucs_probs, f1, feature_importance, cohen_kappa, conf_mat, accuracies
 
 
 def metrics_from_cv_result(cv_result: tuple) -> dict:
@@ -217,15 +219,19 @@ def metrics_from_cv_result(cv_result: tuple) -> dict:
     Returns:
         dict: means and standard of the cross-validation metrics
     """
-    tprs, aucs_preds, aucs_probs, f1, _, cohen_kappa, conf_mat = cv_result
+    tprs, aucs_preds, aucs_probs, f1, _, cohen_kappa, conf_mat, accuracies = cv_result
     if not tprs:
         mean_cohen = np.mean(cohen_kappa)
         std_cohen = np.std(cohen_kappa)
         mean_confusion_matrix = conf_mat
+        mean_acc = np.mean(accuracies)
+        std_acc = np.std(accuracies)
         metrics = {
-        "mean_cohen_kappa": mean_cohen,
-        "std_cohen_kappa": std_cohen,
-        "mean_confusion_matrix": mean_confusion_matrix
+            "mean_acc": mean_acc,
+            "std_acc": std_acc,
+            "mean_cohen_kappa": mean_cohen,
+            "std_cohen_kappa": std_cohen,
+            "mean_confusion_matrix": mean_confusion_matrix
         }
         return metrics
     

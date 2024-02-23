@@ -58,7 +58,7 @@ def multi_target_classification(
         print("Features containing missing values. Using XGBClassifier to handle those.")
         estimators = ["xgboost"]
         feature_selection_method = None
-        sample_method = None
+        #sample_method = None
 # iterate over targets and features
     report_df = make_report_df(sample_method, feature_selection_method)
     with tqdm(total=(targets.shape[1]) * len(estimators)) as pbar:
@@ -75,7 +75,7 @@ def multi_target_classification(
 
                 cros_val_result = cross_validate_model(model, features, df[target])
                 cv_result_metrics = metrics_from_cv_result(cros_val_result)
-                
+                print(pd.DataFrame(cv_result_metrics))
                 confusion_matrix = plot_confusion_matrix(cv_result_metrics["mean_confusion_matrix"], label_encoders)
                 # todo plot matrix, save the figure
 
@@ -116,7 +116,7 @@ def multi_target_classification(
                 #    feature_selection=feature_selection_method,
                 #    selected_features=selected_features,
             #    )
-            #    pbar.update(1)
+                pbar.update(1)
             #    plot_index += 1
            # report_df.to_excel(output_folder / "report.xlsx")
            # report_df.to_csv(output_folder / "report.csv", sep=";")
