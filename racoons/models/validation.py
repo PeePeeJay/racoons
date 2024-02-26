@@ -178,7 +178,7 @@ def cross_validate_model(model: Pipeline, X: pd.DataFrame, y: pd.Series) -> tupl
     accuracies = []
     feature_importance = pd.DataFrame()
     mean_fpr = np.linspace(0, 1, 100)
-    cv = StratifiedKFold(2)
+    cv = StratifiedKFold(10)
     for fold, (train, test) in enumerate(cv.split(X, y)):
         X_train = X.loc[train, :]
         X_test = X.loc[test, :]
