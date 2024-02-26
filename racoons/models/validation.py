@@ -223,17 +223,17 @@ def metrics_from_cv_result(cv_result: tuple) -> dict:
     if not tprs:
         mean_cohen = np.mean(cohen_kappa)
         std_cohen = np.std(cohen_kappa)
-        mean_confusion_matrix = conf_mat
+        confusion_matrices_np = [np.array(matrix) for matrix in conf_mat]
+        mean_confusion_matrix = np.mean(confusion_matrices_np, axis=0)
         mean_acc = np.mean(accuracies)
         std_acc = np.std(accuracies)
         metrics = {
             "mean_acc": mean_acc,
             "std_acc": std_acc,
             "mean_cohen_kappa": mean_cohen,
-            "std_cohen_kappa": std_cohen,
-            "mean_confusion_matrix": mean_confusion_matrix
+            "std_cohen_kappa": std_cohen
         }
-        return metrics
+        return metrics, mean_confusion_matrix
     
     mean_fpr = np.linspace(0, 1, 100)
     mean_tpr = np.mean(tprs, axis=0)

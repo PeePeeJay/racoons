@@ -74,10 +74,12 @@ def multi_target_classification(
                 )
 
                 cros_val_result = cross_validate_model(model, features, df[target])
-                cv_result_metrics = metrics_from_cv_result(cros_val_result)
-                print(pd.DataFrame(cv_result_metrics))
-                confusion_matrix = plot_confusion_matrix(cv_result_metrics["mean_confusion_matrix"], label_encoders)
-                # todo plot matrix, save the figure
+                cv_result_metrics, confusion_matrix = metrics_from_cv_result(cros_val_result)
+                metrics = pd.DataFrame(cv_result_metrics, index=[0])
+                confusion_matrix_plot = plot_confusion_matrix(confusion_matrix, label_encoders, target)
+                confmat_plot_path = output_folder / (f"confusion_matrix_{plot_index}.png")
+                confusion_matrix_plot.savefig(confmat_plot_path, dpi=300)
+                plt.close(confusion_matrix_plot)
 
                 # feature importance
                 feature_importance = get_feature_importance(model)
@@ -96,7 +98,7 @@ def multi_target_classification(
                 plt.close(feature_importance_plot)
 
                 # save report
-               # selected_features = model["estimator"].feature_names_in_
+                selected_features = model["estimator"].feature_names_in_
                # mean_f1 = cv_result_metrics["mean_f1"]
                # std_f1 = cv_result_metrics["std_f1"]
                # mean_cohens_kappa = cv_result_metrics["mean_cohen_kappa"]
@@ -117,7 +119,7 @@ def multi_target_classification(
                 #    selected_features=selected_features,
             #    )
                 pbar.update(1)
-            #    plot_index += 1
+                plot_index += 1
            # report_df.to_excel(output_folder / "report.xlsx")
            # report_df.to_csv(output_folder / "report.csv", sep=";")
 
