@@ -8,7 +8,7 @@ from pathlib import Path
 from sklearn.metrics import roc_auc_score, roc_curve, f1_score
 from sklearn.model_selection import train_test_split
 from tqdm import tqdm
-
+from collections import defaultdict
 from racoons.models import classifiers
 from racoons.data_utils import features_and_targets_from_dataframe, encode_multitarget_data
 from racoons.models.model_builder import get_estimator, build_model
@@ -24,6 +24,7 @@ from racoons.visualization import (
     plot_roc_curve_from_cv_metrics,
     plot_confusion_matrix
 )
+
 
 ######################## OPEN ISSUES ##################################################
 # TODO: refit on f1 in cross-validation
@@ -60,7 +61,7 @@ def multi_target_classification(
         feature_selection_method = None
         #sample_method = None
 # iterate over targets and features
-    report_df = make_report_df(sample_method, feature_selection_method)
+    report_dict = defaultdict(list)
     with tqdm(total=(targets.shape[1]) * len(estimators)) as pbar:
         plot_index = 0
         for target in targets:
@@ -75,7 +76,6 @@ def multi_target_classification(
 
                 cros_val_result = cross_validate_model(model, features, df[target])
                 cv_result_metrics, confusion_matrix = metrics_from_cv_result(cros_val_result)
-                metrics = pd.DataFrame(cv_result_metrics, index=[0])
                 confusion_matrix_plot = plot_confusion_matrix(confusion_matrix, label_encoders, target)
                 confmat_plot_path = output_folder / (f"confusion_matrix_{plot_index}.png")
                 confusion_matrix_plot.savefig(confmat_plot_path, dpi=300)
@@ -98,32 +98,24 @@ def multi_target_classification(
                 plt.close(feature_importance_plot)
 
                 # save report
-                selected_features = model["estimator"].feature_names_in_
-               # mean_f1 = cv_result_metrics["mean_f1"]
-               # std_f1 = cv_result_metrics["std_f1"]
-               # mean_cohens_kappa = cv_result_metrics["mean_cohen_kappa"]
-               # std_cohens_kappa = cv_result_metrics["std_cohen_kappa"]
 
-                #report_df.loc[len(report_df.index)] = update_report(
-                #    target=target,
-                #    features=selected_features,
-                #    estimator_name=estimator_name,
-                #    mean
-                #    mean_f1=mean_f1,
-                #    std_f1=std_f1,
-                #    roc_plot_path=roc_curve_plot_path,
-                #    feature_importance_csv=feature_importance_csv_path,
-                #    feature_importance_plot_path=feature_importance_plot_path,
-                #    sampling=sample_method,
-                #    feature_selection=feature_selection_method,
-                #    selected_features=selected_features,
-            #    )
+                selected_features = model["estimator"].feature_names_in_
+                report_dict["target"].append(target)
+                report_dict["estimator"].append(estimator)
+                report_dict["features"].append(selected_features)
+                report_dict["confusion_matrix_path"].append(confmat_plot_path)
+                report_dict["feature_importance_plot_path"].append(feature_importance_plot_path)
+                report_dict["feature_importance_csv_path"].append(feature_importance_csv_path)
+                for key, value in cv_result_metrics.items():
+                    # add the metrics
+                    report_dict[key].append(value)
                 pbar.update(1)
                 plot_index += 1
-           # report_df.to_excel(output_folder / "report.xlsx")
-           # report_df.to_csv(output_folder / "report.csv", sep=";")
-
-        #report_df.to_excel(output_folder / "report.xlsx")
+           
+            #report_dict.to_excel(output_folder / "report.xlsx")
+            #report_df.to_csv(output_folder / "report.csv", sep=";")
+        report_df = pd.DataFrame(report_dict)
+        report_df.to_excel(output_folder / "report.xlsx")
         #report_df.to_csv(output_folder / "report.csv", sep=";")
         return report_df
 

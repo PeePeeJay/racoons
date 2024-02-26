@@ -70,6 +70,5 @@ def plot_confusion_matrix(confusion_matrix: list, label_encoders: dict[LabelEnco
     labels = label_encoders[target].inverse_transform(range(confusion_matrix.shape[0]))
     confmat = pd.DataFrame(confusion_matrix, index=labels, columns=labels)
     sns.heatmap(confmat, annot=True)
-    #plot = ConfusionMatrixDisplay(confusion_matrix, display_labels=labels)
-    #ax.set_title(f"Confusion Matrix for {target}")
+    ax.set_title(f"Confusion Matrix for {target}")
     return fig
