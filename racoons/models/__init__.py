@@ -4,7 +4,7 @@ from sklearn.ensemble import (
     AdaBoostClassifier,
     GradientBoostingClassifier,
 )
-from sklearn.feature_selection import SelectFromModel
+from sklearn.feature_selection import SelectFromModel, RFE, f_classif, SelectKBest
 from sklearn.linear_model import LogisticRegression
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.experimental import enable_iterative_imputer
@@ -29,6 +29,8 @@ feature_selection_methods = {
     "lasso": SelectFromModel(
         LogisticRegression(penalty="l1", C=0.8, solver="liblinear")
     ),
+    "rfe": RFE(estimator=XGBClassifier()),
+    "anova": SelectKBest(f_classif, k=10)
 }
 imputer_methods = {
     "k_nearest_neighbors": KNNImputer(),
