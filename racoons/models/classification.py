@@ -24,10 +24,6 @@ from racoons.visualization import (
     plot_roc_curve_from_cv_metrics,
 )
 
-######################## OPEN ISSUES ##################################################
-# TODO: refit on f1 in cross-validation
-#######################################################################################
-
 sklearn.set_config(transform_output="pandas")
 
 
@@ -39,6 +35,7 @@ def multivariate_classification(
         sample_method: str,
         estimators: list[str],
         output_path: Path | str,
+        **kwargs,
 ):
     """
     Run a classification pipeline with cross-validation and save the results.
@@ -75,6 +72,7 @@ def multivariate_classification(
         - Cross-validation is performed, and results including ROC-AUC and feature importance are saved.
         - The output is stored in the specified output_path.
     """
+
     # setup output folder
     output_path = Path(output_path)
     output_path.mkdir(exist_ok=True)

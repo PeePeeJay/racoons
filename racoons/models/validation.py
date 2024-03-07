@@ -113,6 +113,8 @@ def get_param_grid(model: Pipeline):
             param_grid["feature_selection__estimator__C"] = [0.01, 0.1, 1, 10, 100]
             param_grid["feature_selection__estimator__solver"] = ["liblinear"]
             # param_grid["feature_selection__estimator__n_jobs"] = [-1]
+        elif feature_selection_method == "anova":
+            param_grid["feature_selection__k"] = [1, 5, 10, 20, 50, 100]
     if classifier == "logistic_regression":
         param_grid["estimator__penalty"] = ["l1", "l2"]
         param_grid["estimator__solver"] = ["liblinear"]

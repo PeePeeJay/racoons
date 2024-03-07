@@ -10,6 +10,7 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.experimental import enable_iterative_imputer
 from sklearn.impute import KNNImputer, IterativeImputer
 from xgboost import XGBClassifier
+from racoons import logger
 
 classifiers = {
     "logistic_regression": LogisticRegression(n_jobs=-1),
@@ -30,7 +31,7 @@ feature_selection_methods = {
         LogisticRegression(penalty="l1", C=0.8, solver="liblinear")
     ),
     "rfe": RFE(estimator=XGBClassifier()),
-    "anova": SelectKBest(f_classif, k=10)
+    "anova": SelectKBest(score_func=f_classif, k=10)
 }
 imputer_methods = {
     "k_nearest_neighbors": KNNImputer(),
