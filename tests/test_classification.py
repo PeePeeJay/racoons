@@ -1,12 +1,10 @@
 import numpy as np
-import pytest
 
 from racoons.models import classifiers
 from racoons.models.validation import (
     get_param_grid,
     cross_validate_model,
-    get_feature_importance,
-    metrics_from_cv_result
+    get_feature_importance
 )
 from racoons.models.model_builder import build_model
 from racoons.models.classification import (
@@ -14,8 +12,7 @@ from racoons.models.classification import (
     grid_search_multivariate_classification,
     univariate_classification, single_shot_classification,
 )
-from racoons.visualization import plot_feature_importances, plot_roc_curve_from_cv_metrics
-from racoons.data_utils import features_and_targets_from_dataframe
+from racoons.data.utils import features_and_targets_from_dataframe
 
 
 def test_feature_importance(classification_data, classification_data_with_missing_values):

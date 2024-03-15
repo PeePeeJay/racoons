@@ -10,8 +10,8 @@ from sklearn.model_selection import train_test_split
 from tqdm import tqdm
 
 from racoons.models import classifiers
-from racoons.data_utils import features_and_targets_from_dataframe
-from racoons.models.model_builder import get_estimator, build_model
+from racoons.data.utils import features_and_targets_from_dataframe
+from racoons.models.model_builder import build_model
 from racoons.reporting import make_report_df, update_report
 from racoons.models.validation import (
     hyper_parameter_optimization,

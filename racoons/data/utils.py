@@ -1,7 +1,5 @@
-import pandas
 import pandas as pd
 from pandas.core.dtypes.common import is_bool_dtype, is_float_dtype
-from sklearn.preprocessing import OneHotEncoder
 from racoons.models import supported_scale_levels
 
 
@@ -117,3 +115,12 @@ def get_scale_level(feature: pd.Series) -> str:
         print(
             f"The feature {feature.name} has an unsupported dtype '{feature.dtype}' and will be dropped."
         )
+
+
+def create_scale_level_template(df: pd.DataFrame) -> pd.DataFrame:
+    # TODO: write test
+    """Creates a table to be filled with the correct scale levels"""
+    report_df = pd.DataFrame({"Column": df.columns, "Datatype": df.dtypes})
+    return report_df
+
+

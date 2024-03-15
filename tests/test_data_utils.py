@@ -1,7 +1,6 @@
 import pytest
 import pandas as pd
-from racoons.data_utils import features_and_targets_from_dataframe, get_scale_level
-from sklearn.model_selection import cross_validate
+from racoons.data.utils import features_and_targets_from_dataframe, get_scale_level
 
 
 @pytest.mark.parametrize(
