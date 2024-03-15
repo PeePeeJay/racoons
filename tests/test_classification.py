@@ -1,5 +1,6 @@
 import numpy as np
 import pytest
+from itertools import product
 
 from racoons.models import classifiers
 from racoons.models.validation import (
@@ -259,11 +260,11 @@ class TestGridSearchClassification:
     def test_grid_search_classification(
         self, classification_data, classification_data_with_missing_values, tmp_path, output_path
     ):
-        for data in [classification_data, classification_data_with_missing_values]:
+        for data, fs_method in product([classification_data, classification_data_with_missing_values], ["lasso", "anova", "rfe"]):
             df, target_cols, feature_cols = data
             out_path = tmp_path
             sample_method = "smote"
-            feature_selection_method = "lasso"
+            feature_selection_method = fs_method
             classifier_name = classifiers.keys()
 
             if df[feature_cols].isnull().values.any():
