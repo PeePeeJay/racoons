@@ -12,6 +12,35 @@ def forest_based_model():
 
 
 @pytest.fixture()
+def classification_data_multi_target():
+    X, y = make_classification(
+        n_samples=100,
+        n_features=30,
+        n_informative=5,
+        n_classes=4)
+    df = pd.DataFrame(X).add_prefix("feature_")
+    df.insert(0, "outcome", y)
+
+        # cast to correct dtype and add random np.nan values
+
+    df["feature_0"] = np.random.randint(0, 3, size=df.shape[0])
+    df["feature_0"] = df["feature_0"].astype(pd.Int64Dtype())
+    df["feature_1"] = np.random.randint(0, 4, size=df.shape[0])
+    df["feature_1"] = df["feature_1"].astype(pd.CategoricalDtype())
+
+    value_mapping = {0: 'Zebra', 1: 'Cat', 2: 'Fish', 3: 'Dog'}
+    # Map the values in the DataFrame using the dictionary
+    df['outcome'] = df['outcome'].map(value_mapping)
+
+    # target and feature columns
+    target_col = ["outcome"]
+    feature_cols = df.columns.tolist()
+    feature_cols.remove("outcome")
+
+    return df, target_col, feature_cols
+
+
+@pytest.fixture()
 def classification_data():
     X, y = make_classification(
         n_samples=100,
@@ -25,7 +54,7 @@ def classification_data():
     # cast to correct dtype and add random np.nan values
 
     df["outcome"] = df["outcome"].astype(bool)
-    df["feature_0"] = np.random.randint(0, 3)
+    df["feature_0"] = np.random.randint(0, 3, size=df.shape[0])
     df["feature_0"] = df["feature_0"].astype(pd.Int64Dtype())
     df["feature_1"] = np.random.randint(0, 4, size=df.shape[0])
     df["feature_1"] = df["feature_1"].astype(pd.CategoricalDtype())
@@ -52,7 +81,7 @@ def classification_data_with_missing_values():
     # cast to correct dtype and add random np.nan values
 
     df["outcome"] = df["outcome"].astype(bool)
-    df["feature_0"] = np.random.randint(0, 3)
+    df["feature_0"] = np.random.randint(0, 3, size=df.shape[0])
     df["feature_0"] = df["feature_0"].astype(pd.Int64Dtype())
     df.loc[0, "feature_0"] = np.nan
     df["feature_1"] = np.random.randint(0, 4, size=df.shape[0])

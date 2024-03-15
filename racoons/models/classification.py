@@ -8,9 +8,9 @@ from pathlib import Path
 from sklearn.metrics import roc_auc_score, roc_curve, f1_score
 from sklearn.model_selection import train_test_split
 from tqdm import tqdm
-
+from collections import defaultdict
 from racoons.models import classifiers
-from racoons.data_utils import features_and_targets_from_dataframe
+from racoons.data_utils import features_and_targets_from_dataframe, encode_multitarget_data
 from racoons.models.model_builder import get_estimator, build_model
 from racoons.reporting import make_report_df, update_report
 from racoons.models.validation import (
@@ -22,9 +22,102 @@ from racoons.models.validation import (
 from racoons.visualization import (
     plot_feature_importances,
     plot_roc_curve_from_cv_metrics,
+    plot_confusion_matrix
 )
 
+
+######################## OPEN ISSUES ##################################################
+# TODO: refit on f1 in cross-validation
+# TODO: refactor redundand code regarding model building and CV pipeline
+#######################################################################################
+
 sklearn.set_config(transform_output="pandas")
+
+
+def multi_target_classification(
+    df: pd.DataFrame,
+    feature_cols: list[str],
+    target_cols: list[str],
+    feature_selection_method: str,
+    sample_method: str,
+    estimators: list[str],
+    output_path: Path | str,
+):
+    # Create dataset labels
+    output_path = Path(output_path)
+    output_path.mkdir(exist_ok=True)
+    output_folder = (
+            output_path
+            / f"multivariate_analysis_{datetime.now().strftime('%Y-%m-%d_%H_%M_%S')}"
+    )
+    output_folder.mkdir(exist_ok=True)
+    df, label_encoders = encode_multitarget_data(df, target_cols)
+    # get features and targets
+    features, targets, feature_scale_levels = features_and_targets_from_dataframe(
+        df, feature_cols, target_cols)
+    if features.isnull().values.any():
+        print("Features containing missing values. Using XGBClassifier to handle those.")
+        estimators = ["xgboost"]
+        feature_selection_method = None
+        #sample_method = None
+# iterate over targets and features
+    report_dict = defaultdict(list)
+    with tqdm(total=(targets.shape[1]) * len(estimators)) as pbar:
+        plot_index = 0
+        for target in targets:
+            for estimator in estimators:
+                estimator_name = type(classifiers[estimator]).__name__
+                model = build_model(
+                    feature_scale_levels,
+                    sample_method,
+                    feature_selection_method,
+                    estimator,
+                )
+
+                cros_val_result = cross_validate_model(model, features, df[target])
+                cv_result_metrics, confusion_matrix = metrics_from_cv_result(cros_val_result)
+                confusion_matrix_plot = plot_confusion_matrix(confusion_matrix, label_encoders, target)
+                confmat_plot_path = output_folder / (f"confusion_matrix_{plot_index}.png")
+                confusion_matrix_plot.savefig(confmat_plot_path, dpi=300)
+                plt.close(confusion_matrix_plot)
+
+                # feature importance
+                feature_importance = get_feature_importance(model)
+                feature_importance_plot = plot_feature_importances(
+                    feature_importance, title=f"Feature importance for classification of \n {target} \n"
+                                              f"using \n {estimator_name}"
+                )
+                feature_importance_plot_path = output_folder / (
+                    f"feature_importance_{plot_index}.png"
+                )
+                feature_importance_csv_path = output_folder / (
+                    f"feature_importance_{plot_index}.csv"
+                )
+                feature_importance.to_csv(feature_importance_csv_path, sep=";")
+                feature_importance_plot.savefig(feature_importance_plot_path, dpi=300)
+                plt.close(feature_importance_plot)
+
+                # save report
+
+                selected_features = model["estimator"].feature_names_in_
+                report_dict["target"].append(target)
+                report_dict["estimator"].append(estimator)
+                report_dict["features"].append(selected_features)
+                report_dict["confusion_matrix_path"].append(confmat_plot_path)
+                report_dict["feature_importance_plot_path"].append(feature_importance_plot_path)
+                report_dict["feature_importance_csv_path"].append(feature_importance_csv_path)
+                for key, value in cv_result_metrics.items():
+                    # add the metrics
+                    report_dict[key].append(value)
+                pbar.update(1)
+                plot_index += 1
+           
+            #report_dict.to_excel(output_folder / "report.xlsx")
+            #report_df.to_csv(output_folder / "report.csv", sep=";")
+        report_df = pd.DataFrame(report_dict)
+        report_df.to_excel(output_folder / "report.xlsx")
+        #report_df.to_csv(output_folder / "report.csv", sep=";")
+        return report_df
 
 
 def multivariate_classification(

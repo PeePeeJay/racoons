@@ -1,6 +1,8 @@
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from sklearn.metrics import ConfusionMatrixDisplay
+from sklearn.preprocessing import LabelEncoder
 from matplotlib import pyplot as plt
 
 
@@ -64,4 +66,13 @@ def plot_roc_curve_from_cv_metrics(cv_result_metrics: dict, plot_title: str):
     ax.title.set_size(20)
     ax.axis("square")
     ax.legend(loc="lower right")
+    return fig
+
+
+def plot_confusion_matrix(confusion_matrix: list, label_encoders: dict[LabelEncoder], target: str):
+    fig, ax = plt.subplots(figsize=(6,6))
+    labels = label_encoders[target].inverse_transform(range(confusion_matrix.shape[0]))
+    confmat = pd.DataFrame(confusion_matrix, index=labels, columns=labels)
+    sns.heatmap(confmat, annot=True)
+    ax.set_title(f"Confusion Matrix for {target}")
     return fig

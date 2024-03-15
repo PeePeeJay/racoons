@@ -14,6 +14,7 @@ from racoons.models.classification import (
     multivariate_classification,
     grid_search_multivariate_classification,
     univariate_classification, single_shot_classification,
+    multi_target_classification
 )
 from racoons.visualization import plot_feature_importances, plot_roc_curve_from_cv_metrics
 from racoons.data_utils import features_and_targets_from_dataframe
@@ -72,7 +73,7 @@ class TestClassification:
             )
 
             # Test the cross_validate_model function
-            tprs, aucs_preds, aucs_probs, f1_scores, feature_importances = cross_validate_model(
+            tprs, aucs_preds, aucs_probs, f1_scores, feature_importances, _, _, _ = cross_validate_model(
                 model, X, y["outcome"]
             )
 
@@ -119,6 +120,24 @@ class TestClassification:
                 assert len(result_df) == len(target_cols) * len(classifiers)
             assert not result_df.empty
 
+    def test_multi_target_classification(
+            self, classification_data_multi_target, output_path, tmp_path
+    ):
+        out_path = tmp_path
+        df, target_cols, feature_cols = classification_data_multi_target
+        feature_selection_method = "lasso"
+        sample_method = "random_oversampling"
+        result_df = multi_target_classification(df, feature_cols=feature_cols, target_cols=target_cols, feature_selection_method=feature_selection_method,
+                                             sample_method=sample_method, estimators=["xgboost"], output_path=out_path)
+        
+        
+        if df[feature_cols].isnull().values.any():
+            assert len(result_df) == len(target_cols)
+        else:
+            
+            assert not result_df.empty
+        
+
     def test_univariate_classification(
         self, classification_data, classification_data_with_missing_values, tmp_path, output_path
     ):
@@ -131,7 +150,6 @@ class TestClassification:
             if df[feature_cols].isnull().values.any():
                 print("Features containing missing values. Cant use feature selection and sampling.")
                 sample_method = None
-
             result_df = univariate_classification(
                 df=df,
                 feature_cols=feature_cols,
