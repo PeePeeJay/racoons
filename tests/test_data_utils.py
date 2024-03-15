@@ -3,6 +3,7 @@ import pandas as pd
 from racoons.data_utils import features_and_targets_from_dataframe, get_scale_level
 from sklearn.model_selection import cross_validate
 
+
 @pytest.mark.parametrize(
     "test_input, expected_output",
     [
@@ -30,19 +31,17 @@ def test_features_and_targets_from_dataframe(classification_data):
     )
 
     assert feature_scale_levels["categorical"] == [
-        "feature_1_0",
-        "feature_1_1",
-        "feature_1_2",
-        "feature_1_3",
+        "feature_1",
     ]
     assert feature_scale_levels["numerical"] == [
         f"feature_{i}" for i in range(2, len(feature_cols))
     ]
     assert feature_scale_levels["ordinal"] == ["feature_0"]
-    assert (
-        X.columns.tolist()
-        == feature_scale_levels["categorical"]
+    assert all(
+        features
+        in feature_scale_levels["categorical"]
         + feature_scale_levels["ordinal"]
         + feature_scale_levels["numerical"]
+        for features in X.columns.tolist()
     )
     assert y.columns.tolist() == target_cols

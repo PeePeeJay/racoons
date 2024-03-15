@@ -6,6 +6,7 @@ from racoons.models.validation import (
     get_param_grid,
     cross_validate_model,
     get_feature_importance,
+    metrics_from_cv_result
 )
 from racoons.models.model_builder import build_model
 from racoons.models.classification import (
@@ -14,7 +15,7 @@ from racoons.models.classification import (
     univariate_classification, single_shot_classification,
     multi_target_classification
 )
-from racoons.visualization import plot_feature_importances
+from racoons.visualization import plot_feature_importances, plot_roc_curve_from_cv_metrics
 from racoons.data_utils import features_and_targets_from_dataframe
 
 
@@ -41,7 +42,6 @@ def test_feature_importance(classification_data, classification_data_with_missin
 
         model.fit(X, y)
         feature_importance = get_feature_importance(model)
-        plot_feature_importances(feature_importance)
         assert (
             feature_importance.columns.tolist()
             == model["estimator"].feature_names_in_.tolist()

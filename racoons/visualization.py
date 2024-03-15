@@ -6,22 +6,26 @@ from sklearn.preprocessing import LabelEncoder
 from matplotlib import pyplot as plt
 
 
-def plot_feature_importances(feature_importances: pd.DataFrame, title=None) -> plt.Figure:
+def plot_feature_importances(feature_importances: pd.DataFrame, title=None, **kwargs) -> plt.Figure:
     df = feature_importances.reindex(
         feature_importances.mean().abs().sort_values(ascending=False).index, axis=1
     )
+    fontsize = kwargs.get("fontsize", 20)
     if title is None:
         title = "Feature importance"
     if df.shape[1] > 20:
         data = df.loc[:, df.columns[:20]]
     else:
         data = df
-    fig, ax = plt.subplots(figsize=(12, 12))
+    fig, ax = plt.subplots(figsize=(30, 14))
     sns.barplot(data=data, orient="h", color="b", saturation=1, ax=ax)
     ax.axvline(x=0, color=".5")
     ax.xaxis.set_label("Feature importance")
-    ax.set_title(f"{title}")
-    ax.tick_params(axis="y", labelsize=5)
+    for item in ([ax.xaxis.label, ax.yaxis.label] +
+                 ax.get_xticklabels() + ax.get_yticklabels()):
+        item.set_fontsize(fontsize)
+    ax.set_title(f"{title}", fontsize=25)
+    # ax.tick_params(axis="y", labelsize=5)
     return fig
 
 
@@ -59,7 +63,7 @@ def plot_roc_curve_from_cv_metrics(cv_result_metrics: dict, plot_title: str):
         ylabel="True Positive Rate",
         title=f"{plot_title}",
     )
-    ax.title.set_size(8)
+    ax.title.set_size(20)
     ax.axis("square")
     ax.legend(loc="lower right")
     return fig

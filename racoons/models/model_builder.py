@@ -46,15 +46,13 @@ def get_preprocessing_steps(feature_scale_levels: dict) -> list[tuple[str, objec
         # )
         pass
     if feature_scale_levels["categorical"]:
-        # transformers.append(
-        #     (
-        #         "categorical",
-        #         categorical_preprocessing(),
-        #         feature_scale_levels["categorical"],
-        #     )
-        # )
-        # # moved preprocessing of categorical features before pipeline
-        pass
+        transformers.append(
+            (
+                "categorical",
+                categorical_preprocessing(),
+                feature_scale_levels["categorical"],
+            )
+        )
     if transformers:
         return [("preprocessor", ColumnTransformer(transformers))]
     else:
