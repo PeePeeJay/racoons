@@ -118,9 +118,17 @@ def get_scale_level(feature: pd.Series) -> str:
 
 
 def create_scale_level_template(df: pd.DataFrame) -> pd.DataFrame:
-    # TODO: write test
     """Creates a table to be filled with the correct scale levels"""
-    report_df = pd.DataFrame({"Column": df.columns, "Datatype": df.dtypes})
+    dtypes = []
+    for dtype in df.dtypes:  # Loop through each column's datatype
+        if pd.api.types.is_string_dtype(dtype) or pd.api.types.is_object_dtype(dtype) or pd.api.types.is_bool_dtype(dtype):
+            dtypes.append("categorical")
+        elif pd.api.types.is_numeric_dtype(dtype):
+            dtypes.append("numerical")
+        else:
+            dtypes.append("other")  # For any datatype not covered explicitly
+
+    report_df = pd.DataFrame({"Column": df.columns, "Datatype": dtypes})
     return report_df
 
 

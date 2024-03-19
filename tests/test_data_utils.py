@@ -1,6 +1,6 @@
 import pytest
 import pandas as pd
-from racoons.data.utils import features_and_targets_from_dataframe, get_scale_level
+from racoons.data.utils import features_and_targets_from_dataframe, get_scale_level, create_scale_level_template
 
 
 @pytest.mark.parametrize(
@@ -44,3 +44,21 @@ def test_features_and_targets_from_dataframe(classification_data):
         for features in X.columns.tolist()
     )
     assert y.columns.tolist() == target_cols
+
+
+def test_create_scale_level_template():
+    # Create a sample DataFrame to test
+    data = {
+        "Finding": ["None", "Benign", "Malignant"],
+        "Size": [178, 167, 110],
+        "value": [43.66, 38.44, 11.6],
+        "bools": [True, False, True]
+    }
+    df = pd.DataFrame(data)
+
+    expected_result = pd.DataFrame({
+        "Column": ["Finding", "Size", "value", "bools"],
+        "Datatype": ["categorical", "numerical", "numerical", "categorical"]
+    })
+    result = create_scale_level_template(df)
+    pd.testing.assert_frame_equal(result, expected_result)
