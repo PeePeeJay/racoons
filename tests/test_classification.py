@@ -6,8 +6,7 @@ from racoons.models import classifiers
 from racoons.models.validation import (
     get_param_grid,
     cross_validate_model,
-    get_feature_importance,
-    metrics_from_cv_result
+    get_feature_importance
 )
 from racoons.models.model_builder import build_model
 from racoons.models.classification import (
@@ -16,8 +15,7 @@ from racoons.models.classification import (
     univariate_classification, single_shot_classification,
     multi_target_classification
 )
-from racoons.visualization import plot_feature_importances, plot_roc_curve_from_cv_metrics
-from racoons.data_utils import features_and_targets_from_dataframe
+from racoons.data.utils import features_and_targets_from_dataframe
 
 
 def test_feature_importance(classification_data, classification_data_with_missing_values):
@@ -129,14 +127,14 @@ class TestClassification:
         sample_method = "random_oversampling"
         result_df = multi_target_classification(df, feature_cols=feature_cols, target_cols=target_cols, feature_selection_method=feature_selection_method,
                                              sample_method=sample_method, estimators=["xgboost"], output_path=out_path)
-        
-        
+
+
         if df[feature_cols].isnull().values.any():
             assert len(result_df) == len(target_cols)
         else:
-            
+
             assert not result_df.empty
-        
+
 
     def test_univariate_classification(
         self, classification_data, classification_data_with_missing_values, tmp_path, output_path

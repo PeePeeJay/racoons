@@ -1,7 +1,7 @@
 import pytest
 from imblearn.pipeline import Pipeline
 
-from racoons.data_utils import features_and_targets_from_dataframe
+from racoons.data.utils import features_and_targets_from_dataframe
 from racoons.models import classifiers, sample_methods, feature_selection_methods
 from racoons.models.model_builder import (
     get_estimator,

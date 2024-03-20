@@ -10,8 +10,8 @@ from sklearn.model_selection import train_test_split
 from tqdm import tqdm
 from collections import defaultdict
 from racoons.models import classifiers
-from racoons.data_utils import features_and_targets_from_dataframe, encode_multitarget_data
-from racoons.models.model_builder import get_estimator, build_model
+from racoons.data.utils import features_and_targets_from_dataframe, encode_multitarget_data
+from racoons.models.model_builder import build_model, get_estimator
 from racoons.reporting import make_report_df, update_report
 from racoons.models.validation import (
     hyper_parameter_optimization,
@@ -111,7 +111,7 @@ def multi_target_classification(
                     report_dict[key].append(value)
                 pbar.update(1)
                 plot_index += 1
-           
+
             #report_dict.to_excel(output_folder / "report.xlsx")
             #report_df.to_csv(output_folder / "report.csv", sep=";")
         report_df = pd.DataFrame(report_dict)
