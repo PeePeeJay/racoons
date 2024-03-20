@@ -3,7 +3,7 @@ from typing import Any
 import numpy as np
 import pandas as pd
 from imblearn.pipeline import Pipeline
-from sklearn.metrics import roc_curve, f1_score, auc, roc_auc_score
+from sklearn.metrics import roc_curve, f1_score, auc, roc_auc_score, cohen_kappa_score, confusion_matrix, accuracy_score
 from sklearn.model_selection import (
     GridSearchCV,
     RepeatedStratifiedKFold,
@@ -113,6 +113,8 @@ def get_param_grid(model: Pipeline):
             param_grid["feature_selection__estimator__C"] = [0.01, 0.1, 1, 10, 100]
             param_grid["feature_selection__estimator__solver"] = ["liblinear"]
             # param_grid["feature_selection__estimator__n_jobs"] = [-1]
+        elif feature_selection_method == "anova":
+            param_grid["feature_selection__k"] = [1, 5, 10, 20, 50, 100]
     if classifier == "logistic_regression":
         param_grid["estimator__penalty"] = ["l1", "l2"]
         param_grid["estimator__solver"] = ["liblinear"]
@@ -173,6 +175,9 @@ def cross_validate_model(model: Pipeline, X: pd.DataFrame, y: pd.Series) -> tupl
     aucs_preds = []
     aucs_probs = []
     f1 = []
+    cohen_kappa = []
+    conf_mat = []
+    accuracies = []
     feature_importance = pd.DataFrame()
     mean_fpr = np.linspace(0, 1, 100)
     cv = StratifiedKFold(10)
@@ -184,21 +189,30 @@ def cross_validate_model(model: Pipeline, X: pd.DataFrame, y: pd.Series) -> tupl
         model.fit(X_train, y_train)
         y_pred = model.predict(X_test)
         y_proba = model.predict_proba(X_test)
-        fpr, tpr, _ = roc_curve(y_test, y_pred)
-        f1.append(f1_score(y_test, y_pred))
-        interp_tpr = np.interp(mean_fpr, fpr, tpr)
-        interp_tpr[0] = 0.0
-        tprs.append(interp_tpr)
-        aucs_preds.append(auc(fpr, tpr))
-        aucs_probs.append(roc_auc_score(y_test, y_proba[:, 1]))
+       
+        if y.nunique() < 3: # binary classification
+            fpr, tpr, _ = roc_curve(y_test, y_pred)
+            interp_tpr = np.interp(mean_fpr, fpr, tpr)
+            interp_tpr[0] = 0.0
+            tprs.append(interp_tpr)
+            aucs_preds.append(auc(fpr, tpr))
+            aucs_probs.append(roc_auc_score(y_test, y_proba[:, 1]))
+            f1.append(f1_score(y_test, y_pred))
+            cohen_kappa = None
+        else: # multiclass
+            aucs_preds, aucs_probs, tprs = None, None, None
+            cohen_kappa.append(cohen_kappa_score(y_test, y_pred))
+            conf_mat.append(confusion_matrix(y_test, y_pred))
+            accuracies.append(accuracy_score(y_test, y_pred))
+
         feature_importance = pd.concat(
             [feature_importance, get_feature_importance(model)], axis=0
         )
 
-    return tprs, aucs_preds, aucs_probs, f1, feature_importance
+    return tprs, aucs_preds, aucs_probs, f1, feature_importance, cohen_kappa, conf_mat, accuracies
 
 
-def metrics_from_cv_result(cv_result: tuple):
+def metrics_from_cv_result(cv_result: tuple) -> dict:
     """
     Computes results from the cv
     Args:
@@ -207,7 +221,22 @@ def metrics_from_cv_result(cv_result: tuple):
     Returns:
         dict: means and standard of the cross-validation metrics
     """
-    tprs, aucs_preds, aucs_probs, f1, _ = cv_result
+    tprs, aucs_preds, aucs_probs, f1, _, cohen_kappa, conf_mat, accuracies = cv_result
+    if not tprs:
+        mean_cohen = np.mean(cohen_kappa)
+        std_cohen = np.std(cohen_kappa)
+        confusion_matrices_np = [np.array(matrix) for matrix in conf_mat]
+        mean_confusion_matrix = np.mean(confusion_matrices_np, axis=0)
+        mean_acc = np.mean(accuracies)
+        std_acc = np.std(accuracies)
+        metrics = {
+            "mean_acc": mean_acc,
+            "std_acc": std_acc,
+            "mean_cohen_kappa": mean_cohen,
+            "std_cohen_kappa": std_cohen
+        }
+        return metrics, mean_confusion_matrix
+    
     mean_fpr = np.linspace(0, 1, 100)
     mean_tpr = np.mean(tprs, axis=0)
     mean_tpr[-1] = 1.0

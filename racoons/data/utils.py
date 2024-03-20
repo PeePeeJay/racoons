@@ -2,6 +2,9 @@ import numpy as np
 import pandas as pd
 from typing import List
 from pandas.core.dtypes.common import is_bool_dtype, is_float_dtype
+from collections import defaultdict
+from pandas.core.dtypes.common import is_bool_dtype, is_float_dtype, is_integer_dtype
+from sklearn.preprocessing import OneHotEncoder, LabelEncoder
 from racoons.models import supported_scale_levels
 
 
@@ -51,10 +54,10 @@ def features_and_targets_from_dataframe(
         f"ordinal features: {len(ordinal_features)}\n"
         f"categorical features: {len(categorical_features)}\n"
     )
-    # check if target columns are binary
+    # check if target columns are binary or numeric if multiclass
     target_cols_selected = []
     for col in target_cols:
-        if is_bool_dtype(df[col].dtype):
+        if is_bool_dtype(df[col].dtype) or is_integer_dtype(df[col].dtype):
             target_cols_selected.append(col)
         else:
             print(
@@ -76,7 +79,7 @@ def features_and_targets_from_dataframe(
     return (
         df.loc[:, feature_cols_selected],
         df.loc[:, target_cols_selected],
-        feature_scale_levels,
+        feature_scale_levels
     )
 
 
@@ -141,3 +144,8 @@ def create_scale_level_template(df: pd.DataFrame, columns_to_use: List[str] = No
     return report_df
 
 
+def encode_multitarget_data(df: pd.DataFrame, target_columns: list[str]) -> tuple[pd.DataFrame, defaultdict]:
+    label_encoders = defaultdict(LabelEncoder)
+    for col in target_columns:
+        df[col] = label_encoders[col].fit_transform(df[col])
+    return df, label_encoders
