@@ -1,4 +1,6 @@
+import numpy as np
 import pandas as pd
+from typing import List
 from pandas.core.dtypes.common import is_bool_dtype, is_float_dtype
 from racoons.models import supported_scale_levels
 
@@ -107,7 +109,7 @@ def get_scale_level(feature: pd.Series) -> str:
     """
     if is_float_dtype(feature.dtype):
         return "numerical"
-    elif isinstance(feature.dtype, pd.Int64Dtype):
+    elif feature.dtype == np.int64:
         return "ordinal"
     elif isinstance(feature.dtype, pd.CategoricalDtype):
         return "categorical"
@@ -117,18 +119,25 @@ def get_scale_level(feature: pd.Series) -> str:
         )
 
 
-def create_scale_level_template(df: pd.DataFrame) -> pd.DataFrame:
+def create_scale_level_template(df: pd.DataFrame, columns_to_use: List[str] = None) -> pd.DataFrame:
     """Creates a table to be filled with the correct scale levels"""
     dtypes = []
-    for dtype in df.dtypes:  # Loop through each column's datatype
-        if pd.api.types.is_string_dtype(dtype) or pd.api.types.is_object_dtype(dtype) or pd.api.types.is_bool_dtype(dtype):
-            dtypes.append("categorical")
-        elif pd.api.types.is_numeric_dtype(dtype):
-            dtypes.append("numerical")
-        else:
-            dtypes.append("other")  # For any datatype not covered explicitly
+    levels = []
+    if not columns_to_use:
+        columns_to_use = df.columns.tolist()
+    for column in df.columns:
+        if column in columns_to_use:
+            if pd.api.types.is_string_dtype(df[column].dtype) or pd.api.types.is_object_dtype(df[column].dtype) or pd.api.types.is_bool_dtype(df[column].dtype):
+                dtypes.append("categorical")
+                levels.append(None)
+            elif pd.api.types.is_numeric_dtype(df[column].dtype):
+                dtypes.append("numerical")
+                levels.append(None)
+            else:
+                dtypes.append("provide scale level")
+                levels.append(None)
 
-    report_df = pd.DataFrame({"Column": df.columns, "Datatype": dtypes})
+    report_df = pd.DataFrame({"Column": columns_to_use, "Scale Level": dtypes, "Level order (for ordinal values)": levels})
     return report_df
 
 

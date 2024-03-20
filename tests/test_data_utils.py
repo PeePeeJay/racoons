@@ -57,8 +57,9 @@ def test_create_scale_level_template():
     df = pd.DataFrame(data)
 
     expected_result = pd.DataFrame({
-        "Column": ["Finding", "Size", "value", "bools"],
-        "Datatype": ["categorical", "numerical", "numerical", "categorical"]
+        "Column": ["Finding", "Size", "value"],
+        "Scale Level": ["categorical", "numerical", "numerical"],
+        "Level order (for ordinal values)": [None, None, None]
     })
-    result = create_scale_level_template(df)
+    result = create_scale_level_template(df, columns_to_use=["Finding", "Size", "value"])
     pd.testing.assert_frame_equal(result, expected_result)
