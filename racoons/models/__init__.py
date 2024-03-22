@@ -10,7 +10,7 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.experimental import enable_iterative_imputer
 from sklearn.impute import KNNImputer, IterativeImputer
 from xgboost import XGBClassifier
-from racoons import logger
+#from racoons import logger
 
 classifiers = {
     "logistic_regression": LogisticRegression(n_jobs=-1),

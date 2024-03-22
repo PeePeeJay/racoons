@@ -11,7 +11,6 @@ class DataSet:
         self.feature_cols = feature_cols
         self.target_cols = target_cols
         self._read_dataframe()
-        self.ordinal_lookup = {}
         if not scale_levels:
             self.scale_levels_path = self.dataset_path.parent / "scale_levels.csv"
             self.scale_levels = self._read_scale_levels()
